@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PassTheWord")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1f3c816cf76ad28bc94a354dbb97993ff8fad941")]
 [assembly: System.Reflection.AssemblyProductAttribute("PassTheWord")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PassTheWord")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
