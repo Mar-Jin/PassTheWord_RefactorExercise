@@ -110,10 +110,15 @@ namespace PassTheWord {
                 
             }
 
-            for (int i = 0; i < len; i++) {
-                if (replacements.ContainsKey(buf[i])) {
-                    if (RND.GetInt32(2147483647) > 0x3FFFFFFF) {
-                        buf[i] = replacements[buf[i]];
+            for (int i = 0; i < len; i++)
+            {
+                char currentCharacter = buf[i];
+                if (replacements.ContainsKey(currentCharacter))
+                {
+                    bool shouldReplace = RND.GetInt32(0, 100) < 50;
+                    
+                    if (shouldReplace) {
+                        buf[i] = replacements[currentCharacter];
                     }
                 }
             }
