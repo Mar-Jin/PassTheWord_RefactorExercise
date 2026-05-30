@@ -82,6 +82,7 @@ namespace PassTheWord {
                 return -1;*/
 
             sb.Clear();
+            
             if (!interactive) {
                 if (excludeSimilar) {
                     if (reqUpper) buf[len++] = RND.GetString("ABCDEFGHJKLMNPQRSTUVWXYZ", 1)[0];
@@ -94,20 +95,21 @@ namespace PassTheWord {
                 }
                 RND.GetItems(alphabet, buf.Slice(len, minlength - len));
                 RND.Shuffle(buf.Slice(0, minlength));
-                goto reps;
+            }
+            else
+            {
+                string? s1 = null;
+                do {
+                    //FIXME We need to be more flexible regarding input options (e.g. GUI)
+                    Console.Write("Enter passphrase: ");
+                    s1 = Console.ReadLine();
+                    //TODO assert unicode MLP, reqX
+                } while (s1.Length < minlength  ||  s1.Length > buf.Length);
+                len = s1.Length;
+                s1.TryCopyTo(buf);
+                
             }
 
-            string? s1 = null;
-            do {
-                //FIXME We need to be more flexible regarding input options (e.g. GUI)
-                Console.Write("Enter passphrase: ");
-                s1 = Console.ReadLine();
-                //TODO assert unicode MLP, reqX
-            } while (s1.Length < minlength  ||  s1.Length > buf.Length);
-            len = s1.Length;
-            s1.TryCopyTo(buf);
-
-reps:
             for (int i = 0; i < len; i++) {
                 if (replacements.ContainsKey(buf[i])) {
                     if (RND.GetInt32(2147483647) > 0x3FFFFFFF) {
