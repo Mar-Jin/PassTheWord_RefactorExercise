@@ -26,17 +26,20 @@ namespace PassTheWord {
             // check buf.Length >= minlength
             // check nothing in replacements is surrogate
 
-            if (dictionary != null) {
-                foreach (string s in dictionary) {
-                    foreach (char c in s)
-                        if (Char.IsSurrogate(c))
-                            return -1;
-                }
+            // Check Words Dictionary Given
+            if (dictionary != null)
+            {
+                Console.WriteLine("Log - Checking Dictionary for Surrogates:");
+                if (ContainsSurrogate(dictionary)) return -1;
 
                 while (len < minlength) {
                     string w = dictionary[RND.GetInt32(dictionary.Count)];
+                    Console.WriteLine(w);
+                    
                     if (!w.TryCopyTo(buf.Slice(len)))
+                    {
                         return -1;
+                    }
                     len += w.Length;
                 }
 
@@ -117,17 +120,37 @@ reps:
         }
 
         static void Main(string[] args) {
-            List<string> words = new() { "hallo", "kat", "hond", "paard", "wei", "accu", "batterij", "doei" };
+            List<string> words = new() { "hallo", "kat", "hond", "paard", "wei", "accu", "batterij", "doei"};
+            List<string> longWords = new() { "kindercarnavalsoptochtvoorbereidingswerkzaamheden", "aansprakelijkheidswaardevaststellingsveranderingen",
+                "Hottentottensoldatententententoonstellingsbouwterrein",
+                "elektriciteitsproductiemaatschappijbuitenlandbelangen", 
+                "geneesmiddelenvergoedingssysteemorganisatiestructuur" };
+            List<string> wordsWithSurrogate = new() { "𠜎" };
             Dictionary<char, char> subs = new() { { 'o', '0' }, { 'i', '1' }, { 's', '$' } };
             char[] buf = new char[100];
             int len = 0;
 
-            //len = GeneratePassword(true, buf, 8, 20, false, false, false, false, false, false, false, false, subs, null);
+            /*len = GeneratePassword(true, buf, 8, 20, false, false, false, false, false, false, false, false, subs, null);
+            Console.WriteLine($"{len}: {new string(buf[0..len])}");*/
+            len = GeneratePassword(false, buf, 8, 20, false, false, false, false, false, false, false, false, subs, words);
             Console.WriteLine($"{len}: {new string(buf[0..len])}");
-            //len = GeneratePassword(false, buf, 8, 20, false, false, false, false, false, false, false, false, subs, words);
-            Console.WriteLine($"{len}: {new string(buf[0..len])}");
-            len = GeneratePassword(false, buf, 8, 20, true, true, false, true, false, false, false, true, new Dictionary<char, char>(), null);
-            Console.WriteLine($"{len}: {new string(buf[0..len])}");
+            /*len = GeneratePassword(false, buf, 8, 20, true, true, false, true, false, false, false, true, new Dictionary<char, char>(), null);
+            Console.WriteLine($"{len}: {new string(buf[0..len])}");*/
+        }
+
+        private static bool ContainsSurrogate(List<string> dictionary)
+        {
+            foreach (string s in dictionary) {
+                foreach (char c in s)
+                {
+                    if (Char.IsSurrogate(c))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
     }
 }
