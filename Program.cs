@@ -31,8 +31,10 @@ namespace PassTheWord {
             {
                 Console.WriteLine("Log - Checking Dictionary for Surrogates:");
                 if (ContainsSurrogate(dictionary)) return -1;
-
-                while (len < minlength) {
+    
+                Console.WriteLine("Log - Adding words to the result");
+                while (len < minlength)
+                {
                     string w = dictionary[RND.GetInt32(dictionary.Count)];
                     Console.WriteLine(w);
                     
@@ -43,10 +45,15 @@ namespace PassTheWord {
                     len += w.Length;
                 }
 
-                for (int i = 0; i < len; i++) {
-                    if (replacements.ContainsKey(buf[i])) {
-                        if (RND.GetInt32(2147483647) > 0x3FFFFFFF) {
-                            buf[i] = replacements[buf[i]];
+                for (int i = 0; i < len; i++)
+                {
+                    char currentCharacter = buf[i];
+                    if (replacements.ContainsKey(currentCharacter))
+                    {
+                        bool shouldReplace = RND.GetInt32(0, 100) < 50;
+                    
+                        if (shouldReplace) {
+                            buf[i] = replacements[currentCharacter];
                         }
                     }
                 }
@@ -61,14 +68,17 @@ namespace PassTheWord {
             if (digits)    alphabet += !excludeSimilar ? "0123456789" : "23456789";
             if (symbols)   alphabet += "!@#$%^&*()_+-=,./?~";
 
+            /*Console.WriteLine("Log - String Builder");
             StringBuilder sb = new();
-            /*for (int i = 0; i < minlength; i++) {
+            for (int i = 0; i < minlength; i++) {
                 string s = RND.GetString(alphabet, 1);
                 if (Char.IsUpper(s[0])) reqUpper = false;
                 if (Char.IsDigit(s[0])) reqDigit = false;
                 if (Char.IsSymbol(s[0])) reqSymbol = false;
+                Console.WriteLine(s);
                 sb.Append(s);
             }
+            Console.WriteLine(sb);
 
             if (reqUpper)
                 sb.Insert(rnd.Next(sb.Length), RND.GetString("ABCDEFGHIJKLMNOPQRSTUVWXYZ", 1));
@@ -76,12 +86,10 @@ namespace PassTheWord {
                 sb.Insert(rnd.Next(sb.Length), RND.GetString("0123456789", 1));
             if (reqSymbol)
                 sb.Insert(rnd.Next(sb.Length), RND.GetString("!@#$%^&*()_+-=,./?~", 1));
-            */
 
-            /*check if (reqUpper && !uppercase  ||  reqDigit && !digits  ||  reqSymbol && !symbols)
-                return -1;*/
+            if (ContainsParadoxialRequest(reqUpper, reqDigit, reqSymbol, uppercase, digits, symbols)) return -1;
 
-            sb.Clear();
+            sb.Clear();*/
             
             if (!interactive) {
                 if (excludeSimilar) {
@@ -93,6 +101,11 @@ namespace PassTheWord {
                     if (reqDigit) buf[len++] = RND.GetString("2345678901", 1)[0];
                     if (reqSymbol) buf[len++] = RND.GetString("!@#$%^&*()_+-=,./?~", 1)[0];
                 }
+                foreach (char c in buf)
+                {
+                    Console.WriteLine(c);
+                }
+                
                 RND.GetItems(alphabet, buf.Slice(len, minlength - len));
                 RND.Shuffle(buf.Slice(0, minlength));
             }
@@ -107,7 +120,6 @@ namespace PassTheWord {
                 } while (s1.Length < minlength  ||  s1.Length > buf.Length);
                 len = s1.Length;
                 s1.TryCopyTo(buf);
-                
             }
 
             for (int i = 0; i < len; i++)
@@ -128,10 +140,13 @@ namespace PassTheWord {
 
         static void Main(string[] args) {
             List<string> words = new() { "hallo", "kat", "hond", "paard", "wei", "accu", "batterij", "doei"};
-            List<string> longWords = new() { "kindercarnavalsoptochtvoorbereidingswerkzaamheden", "aansprakelijkheidswaardevaststellingsveranderingen",
+            List<string> longWords = new() { 
+                "kindercarnavalsoptochtvoorbereidingswerkzaamheden", 
+                "aansprakelijkheidswaardevaststellingsveranderingen",
                 "Hottentottensoldatententententoonstellingsbouwterrein",
                 "elektriciteitsproductiemaatschappijbuitenlandbelangen", 
                 "geneesmiddelenvergoedingssysteemorganisatiestructuur" };
+            
             List<string> wordsWithSurrogate = new() { "𠜎" };
             Dictionary<char, char> subs = new() { { 'o', '0' }, { 'i', '1' }, { 's', '$' } };
             char[] buf = new char[100];
@@ -139,7 +154,7 @@ namespace PassTheWord {
 
             /*len = GeneratePassword(true, buf, 8, 20, false, false, false, false, false, false, false, false, subs, null);
             Console.WriteLine($"{len}: {new string(buf[0..len])}");*/
-            len = GeneratePassword(false, buf, 8, 20, false, false, false, false, false, false, false, false, subs, words);
+            len = GeneratePassword(true, buf, 8, 20, true, false, true, false, false, true, false, false, subs, null);
             Console.WriteLine($"{len}: {new string(buf[0..len])}");
             /*len = GeneratePassword(false, buf, 8, 20, true, true, false, true, false, false, false, true, new Dictionary<char, char>(), null);
             Console.WriteLine($"{len}: {new string(buf[0..len])}");*/
