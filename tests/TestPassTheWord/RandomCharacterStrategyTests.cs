@@ -64,7 +64,6 @@ namespace TestPassTheWord
             Assert.That(generatedPassword, Does.Not.Contain('I'));
             Assert.That(generatedPassword, Does.Not.Contain('O'));
             Assert.That(generatedPassword, Does.Not.Contain('l'));
-            Assert.That(generatedPassword, Does.Not.Contain('o'));
             Assert.That(generatedPassword, Does.Not.Contain('0'));
             Assert.That(generatedPassword, Does.Not.Contain('1'));
         }

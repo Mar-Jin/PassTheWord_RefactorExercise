@@ -1,8 +1,12 @@
 namespace PassTheWord.Strategies;
 
-public static class PasswordStrategyFactory
+public class PasswordStrategyFactory
 {
-    public static IPasswordStrategy Create(PasswordOptions options)
+    private static PasswordStrategyFactory? _instance;
+    public static PasswordStrategyFactory Instance => _instance ??= new();
+    private PasswordStrategyFactory() { }
+    
+    public IPasswordStrategy Create(PasswordOptions options)
     {
         if (options.Dictionary != null && options.Dictionary.Count > 0)
         {

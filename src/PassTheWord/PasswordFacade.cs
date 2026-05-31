@@ -7,9 +7,11 @@ namespace PassTheWord;
 
 public class PasswordFacade
 {
-    public PasswordFacade()
+    private readonly PasswordStrategyFactory _factory;
+    public PasswordFacade() : this(PasswordStrategyFactory.Instance) { }
+    public PasswordFacade(PasswordStrategyFactory factory)
     {
-        
+        _factory = factory;
     }
 
     public (int, char[]) GeneratePassword(PasswordOptions options, Span<char> buf)
@@ -21,7 +23,7 @@ public class PasswordFacade
         if (!(buf.Length >= options.MinLength))
             throw new ArgumentException("The length of the buffer is less than the minimum length requested");
 
-        IPasswordStrategy strategy = PasswordStrategyFactory.Create(options);
+        IPasswordStrategy strategy = _factory.Create(options);
 
         return strategy.Generate();
     }
