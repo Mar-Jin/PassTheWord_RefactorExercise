@@ -1,5 +1,4 @@
-using System;
-using System.Collections.Generic;
+using PassTheWord.Requirements;
 using RND = System.Security.Cryptography.RandomNumberGenerator;
 
 namespace PassTheWord.Strategies;
@@ -7,20 +6,27 @@ namespace PassTheWord.Strategies;
 public abstract class BasePasswordStrategy : IPasswordStrategy
 {
     protected readonly PasswordOptions Options;
+    protected RequirementCharacterVisitor Requirements { get; private set; }
 
     protected BasePasswordStrategy(PasswordOptions options)
     {
         Options = options;
+        Requirements = new RequirementCharacterVisitor();
+        Options.Requirements.Accept(Requirements);
     }
 
     public (int len, char[] buf) Generate()
     {
         Span<char> buf = new char[Options.MaxLength];
+        int len = 0;
+        string password;
 
-        int len = FillBuffer(buf);
+        do {
+            len = FillBuffer(buf); 
+            password = new string(buf.Slice(0, len));
+        } while (!Options.Requirements.IsSatisfiedBy(password)); 
 
         ApplyReplacements(buf, len);
-
         return (len, buf.ToArray());
     }
 

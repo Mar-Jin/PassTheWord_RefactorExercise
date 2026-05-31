@@ -17,7 +17,4 @@ public class PasswordOptions
     public bool Lowercase { get; init; }
     public bool Digits { get; init; }
     public bool Symbols { get; init; }
-    public bool ReqUpper { get; init; }
-    public bool ReqDigit { get; init; }
-    public bool ReqSymbol { get; init; }
 }

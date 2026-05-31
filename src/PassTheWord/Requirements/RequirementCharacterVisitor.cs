@@ -11,6 +11,6 @@ public class RequirementCharacterVisitor: IRequirementVisitor
     public void Visit(UppercaseRequirement requirement) => NeedsUpper = true;
     public void Visit(DigitRequirement requirement) => NeedsDigit = true;
     public void Visit(SymbolRequirement requirement) => NeedsSymbol = true;
-    public void Visit(MinLengthRequirement requirement) { }
-    public void Visit(MaxLengthRequirement requirement) { }
+    public void Visit(MinLengthRequirement requirement) => MinLength = requirement.Min;
+    public void Visit(MaxLengthRequirement requirement) => MaxLength = requirement.Max;
 }

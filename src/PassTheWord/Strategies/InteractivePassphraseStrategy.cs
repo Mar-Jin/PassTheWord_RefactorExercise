@@ -39,7 +39,7 @@ public class InteractivePassphraseStrategy(PasswordOptions options): BasePasswor
             Console.Write("Enter passphrase: ");
             s1 = Console.ReadLine();
             //TODO assert Unicode MLP, reqX
-        } while (s1.Length < options.MinLength || s1.Length > buf.Length);
+        } while (s1.Length < Requirements.MinLength || s1.Length > buf.Length);
 
         len = s1.Length;
         s1.TryCopyTo(buf);

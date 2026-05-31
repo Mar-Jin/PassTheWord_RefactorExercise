@@ -60,21 +60,18 @@ public class PasswordOptionsBuilder
 
     public PasswordOptionsBuilder RequireUppercase()
     {
-        _reqUpper = true;
         _requirements.Add(new UppercaseRequirement());
         return this;
     }
 
     public PasswordOptionsBuilder RequireDigit()
     {
-        _reqDigit = true;
         _requirements.Add(new DigitRequirement());
         return this;
     }
 
     public PasswordOptionsBuilder RequireSymbol()
     {
-        _reqSymbol = true; 
         _requirements.Add(new SymbolRequirement());
         return this;
     }
@@ -99,9 +96,6 @@ public class PasswordOptionsBuilder
             Lowercase = _lowercase,
             Digits = _digits,
             Symbols = _symbols,
-            ReqUpper = _reqUpper,
-            ReqDigit = _reqDigit,
-            ReqSymbol = _reqSymbol
         };
     }
 }

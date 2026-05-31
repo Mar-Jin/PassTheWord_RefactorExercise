@@ -34,21 +34,18 @@ public class RandomCharacterStrategy(PasswordOptions options): BasePasswordStrat
 
         sb.Clear();*/
         
-        var visitor = new RequirementCharacterVisitor();
-        Options.Requirements.Accept(visitor);
-        
         if (Options.ExcludeSimilar)
         {
-            if (visitor.NeedsUpper) buf[len++] = RND.GetString("ABCDEFGHJKLMNPQRSTUVWXYZ", 1)[0];
-            if (visitor.NeedsDigit) buf[len++] = RND.GetString("23456789", 1)[0];
+            if (Requirements.NeedsUpper) buf[len++] = RND.GetString("ABCDEFGHJKLMNPQRSTUVWXYZ", 1)[0];
+            if (Requirements.NeedsDigit) buf[len++] = RND.GetString("23456789", 1)[0];
         }
         else
         {
-            if (visitor.NeedsUpper) buf[len++] = RND.GetString("ABCDEFGHJKLMNPQRSTUVWXYZIO", 1)[0];
-            if (visitor.NeedsDigit) buf[len++] = RND.GetString("2345678901", 1)[0];
+            if (Requirements.NeedsUpper) buf[len++] = RND.GetString("ABCDEFGHJKLMNPQRSTUVWXYZIO", 1)[0];
+            if (Requirements.NeedsDigit) buf[len++] = RND.GetString("2345678901", 1)[0];
         }
 
-        if (visitor.NeedsSymbol) buf[len++] = RND.GetString("!@#$%^&*()_+-=,./?~", 1)[0];
+        if (Requirements.NeedsSymbol) buf[len++] = RND.GetString("!@#$%^&*()_+-=,./?~", 1)[0];
         
         int charsToAdd = Options.MinLength - len;
 
