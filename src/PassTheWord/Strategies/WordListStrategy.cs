@@ -6,6 +6,11 @@ public class WordListStrategy(PasswordOptions options): BasePasswordStrategy(opt
 {
     protected override int FillBuffer(Span<char> buf)
     {
+        if (Options.Dictionary == null || Options.Dictionary.Count == 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(Options.Dictionary), "Dictionary cannot be empty.");
+        }
+
         Console.WriteLine("Log - Checking Dictionary for Surrogates:");
         ValidateDictionary();
 
@@ -14,7 +19,7 @@ public class WordListStrategy(PasswordOptions options): BasePasswordStrategy(opt
         
         while (len < Requirements.MinLength)
         {
-            string w = options.Dictionary[RND.GetInt32(options.Dictionary.Count)];
+            string w = Options.Dictionary[RND.GetInt32(Options.Dictionary.Count)];
             Console.WriteLine(w);
 
             if (!w.TryCopyTo(buf.Slice(len)))
@@ -29,7 +34,7 @@ public class WordListStrategy(PasswordOptions options): BasePasswordStrategy(opt
     
     private void ValidateDictionary()
     {
-        foreach (string s in options.Dictionary)
+        foreach (string s in Options.Dictionary!)
         {
             foreach (char c in s)
             {

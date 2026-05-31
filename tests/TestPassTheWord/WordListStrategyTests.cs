@@ -2,70 +2,100 @@ using NUnit.Framework;
 using PassTheWord;
 using System.Collections.Generic;
 
-namespace TestPassTheWord
+namespace TestPassTheWord;
+
+[TestFixture]
+public class WordListStrategyTests : TestBase
 {
-    [TestFixture]
-    public class WordListStrategyTests
+    private List<string> _words;
+
+    [SetUp]
+    public override void Setup()
     {
-        private PasswordFacade _passwordGenerator;
-        private char[] _buf;
-        private List<string> _words;
+        base.Setup();
+        _words = new List<string> { "apple", "banana", "cherry", "date" };
+    }
 
-        [SetUp]
-        public void Setup()
+    [Test]
+    public void Test_WordList_Length_Requirement()
+    {
+        Log("Starting Test_WordList_Length_Requirement");
+        // ARRANGE
+        PasswordOptions options = new PasswordOptionsBuilder()
+            .WithDictionary(_words)
+            .WithLength(20, 40)
+            .Build();
+
+        // ACT
+        var (len, resultBuf) = Facade.GeneratePassword(options, Buffer);
+        string generatedPassword = GetString(resultBuf, len);
+        Log($"Generated password: {generatedPassword}");
+
+        // ASSERT
+        Assert.That(len, Is.GreaterThanOrEqualTo(20), "Password too short");
+    }
+
+    [Test]
+    public void Test_WordList_With_Replacements()
+    {
+        Log("Starting Test_WordList_With_Replacements");
+        // ARRANGE
+        var subs = new Dictionary<char, char> { { 'a', '@' }, { 'e', '3' } };
+        
+        PasswordOptions options = new PasswordOptionsBuilder()
+            .WithDictionary(_words)
+            .WithReplacements(subs)
+            .WithLength(20, 40)
+            .Build();
+
+        bool replacementFound = false;
+
+        // ACT
+        for (int i = 0; i < 20; i++)
         {
-            _passwordGenerator = new PasswordFacade();
-            _buf = new char[100];
-            _words = new List<string> { "apple", "banana", "cherry", "date" };
-        }
+            var (len, resultBuf) = Facade.GeneratePassword(options, Buffer);
+            string generatedPassword = GetString(resultBuf, len);
 
-        [Test]
-        public void Test_WordList_Length_Requirement()
-        {
-            // ARRANGE
-            PasswordOptions options = new PasswordOptionsBuilder()
-                .WithDictionary(_words)
-                .WithLength(20, 40)
-                .Build();
-
-            // ACT
-            var (len, resultBuf) = _passwordGenerator.GeneratePassword(options, _buf);
-            string generatedPassword = new string(resultBuf, 0, len);
-
-            // ASSERT
-            Assert.That(len, Is.GreaterThanOrEqualTo(20));
-        }
-
-        [Test]
-        public void Test_WordList_With_Replacements()
-        {
-            // ARRANGE
-            var subs = new Dictionary<char, char> { { 'a', '@' }, { 'e', '3' } };
-            
-            PasswordOptions options = new PasswordOptionsBuilder()
-                .WithDictionary(_words)
-                .WithReplacements(subs)
-                .WithLength(20, 40)
-                .Build();
-
-            bool replacementFound = false;
-
-            // ACT
-            for (int i = 0; i < 20; i++)
+            if (generatedPassword.Contains('@') || generatedPassword.Contains('3'))
             {
-                var (len, resultBuf) = _passwordGenerator.GeneratePassword(options, _buf);
-                string generatedPassword = new string(resultBuf, 0, len);
-
-                if (generatedPassword.Contains('@') || generatedPassword.Contains('3'))
-                {
-                    replacementFound = true;
-                    System.Console.WriteLine($"LOG: Replacement detected in run {i + 1}: {generatedPassword}");
-                    break;
-                }
+                replacementFound = true;
+                Log($"Replacement detected in run {i + 1}: {generatedPassword}");
+                break;
             }
-
-            // ASSERT
-            Assert.That(replacementFound, Is.True, "No replacements were made in 20 runs.");
         }
+
+        // ASSERT
+        Assert.That(replacementFound, Is.True, "No replacements were made in 20 runs.");
+    }
+
+    [Test]
+    public void Test_WordList_SurrogateCharacters_ThrowsArgumentException()
+    {
+        Log("Starting Test_WordList_SurrogateCharacters_ThrowsArgumentException");
+        // ARRANGE
+        var surrogateWords = new List<string> { "𠜎" };
+        PasswordOptions options = new PasswordOptionsBuilder()
+            .WithDictionary(surrogateWords)
+            .Build();
+
+        // ACT & ASSERT
+        var ex = Assert.Throws<ArgumentException>(() => Facade.GeneratePassword(options, Buffer));
+        Log($"Caught expected exception: {ex.Message}");
+    }
+
+    [Test]
+    public void Test_WordList_WordTooLongForBuffer_ThrowsArgumentException()
+    {
+        Log("Starting Test_WordList_WordTooLongForBuffer_ThrowsArgumentException");
+        char[] tightBuf = new char[5];
+
+        PasswordOptions options = new PasswordOptionsBuilder()
+            .WithDictionary(_words)
+            .WithLength(10, 15)
+            .Build();
+
+        // ACT & ASSERT
+        var ex = Assert.Throws<ArgumentException>(() => Facade.GeneratePassword(options, tightBuf));
+        Log($"Caught expected exception: {ex.Message}");
     }
 }

@@ -6,6 +6,10 @@ using RND = System.Security.Cryptography.RandomNumberGenerator;
 
 namespace PassTheWord.Strategies;
 
+/// <summary>
+/// Provides a base implementation for password generation strategies,
+/// handling common tasks like requirement checking, replacements, and external verification.
+/// </summary>
 public abstract class BasePasswordStrategy : IPasswordStrategy
 {
     protected readonly PasswordOptions Options;
@@ -18,6 +22,10 @@ public abstract class BasePasswordStrategy : IPasswordStrategy
         Options.Requirements.Accept(Requirements);
     }
 
+    /// <summary>
+    /// Generates a password by repeatedly filling the buffer until all requirements 
+    /// and external verifications are satisfied.
+    /// </summary>
     public (int len, char[] buf) Generate()
     {
         char[] buffer = new char[Options.MaxLength];
@@ -33,8 +41,16 @@ public abstract class BasePasswordStrategy : IPasswordStrategy
         return (len, buffer[..len]);
     }
 
+    /// <summary>
+    /// Fills the buffer with initial characters according to the specific strategy.
+    /// </summary>
+    /// <param name="buf">The buffer to fill.</param>
+    /// <returns>The number of characters written to the buffer.</returns>
     protected abstract int FillBuffer(Span<char> buf);
 
+    /// <summary>
+    /// Applies statistical replacements based on the configuration in <see cref="Options"/>.
+    /// </summary>
     private void ApplyReplacements(char[] buf, int len)
     {
         for (int i = 0; i < len; i++)
@@ -49,6 +65,9 @@ public abstract class BasePasswordStrategy : IPasswordStrategy
         }
     }
 
+    /// <summary>
+    /// Validates the generated password against all configured external verifiers.
+    /// </summary>
     private bool VerifyExternal(string password)
     {
         if (Options.Verifiers.Count == 0) return true;
@@ -71,6 +90,9 @@ public abstract class BasePasswordStrategy : IPasswordStrategy
         return true;
     }
     
+    /// <summary>
+    /// Aggregates the character pools from all configured alphabets.
+    /// </summary>
     protected string BuildAlphabet()
     {
         StringBuilder alphabet = new();

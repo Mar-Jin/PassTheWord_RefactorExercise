@@ -8,7 +8,7 @@ public class PasswordStrategyFactory
     
     public IPasswordStrategy Create(PasswordOptions options)
     {
-        if (options.Dictionary != null && options.Dictionary.Count > 0)
+        if (options.Dictionary != null)
         {
             return new WordListStrategy(options);
         }

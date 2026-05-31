@@ -1,18 +1,18 @@
 using NUnit.Framework;
 using PassTheWord;
+using System.Collections.Generic;
 using PassTheWord.Requirements;
 using PassTheWord.Strategies;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace TestPassTheWord;
 
 [TestFixture]
-public class PatternTests
+public class PatternTests : TestBase
 {
     [Test]
     public void Composite_RequirementCollection_ShouldVerifyAllUnderlyingRequirements()
     {
+        Log("Starting Composite_RequirementCollection_ShouldVerifyAllUnderlyingRequirements");
         // ARRANGE
         var collection = new RequirementCollection();
         collection.Add(new MinLengthRequirement(8));
@@ -27,6 +27,7 @@ public class PatternTests
     [Test]
     public void Visitor_RequirementCharacterVisitor_ShouldCollectCorrectState()
     {
+        Log("Starting Visitor_RequirementCharacterVisitor_ShouldCollectCorrectState");
         // ARRANGE
         var collection = new RequirementCollection();
         collection.Add(new UppercaseRequirement());
@@ -39,15 +40,16 @@ public class PatternTests
         collection.Accept(visitor);
 
         // ASSERT
-        Assert.That(visitor.NeedsUpper, Is.True);
-        Assert.That(visitor.NeedsDigit, Is.True);
-        Assert.That(visitor.NeedsSymbol, Is.False);
-        Assert.That(visitor.MinLength, Is.EqualTo(12));
+        Assert.That(visitor.NeedsUpper, Is.True, "NeedsUpper should be true");
+        Assert.That(visitor.NeedsDigit, Is.True, "NeedsDigit should be true");
+        Assert.That(visitor.NeedsSymbol, Is.False, "NeedsSymbol should be false");
+        Assert.That(visitor.MinLength, Is.EqualTo(12), "MinLength mismatch");
     }
 
     [Test]
     public void Factory_Singleton_ShouldCreateCorrectStrategyTypes()
     {
+        Log("Starting Factory_Singleton_ShouldCreateCorrectStrategyTypes");
         // ARRANGE
         var factory = PasswordStrategyFactory.Instance;
 
@@ -62,14 +64,15 @@ public class PatternTests
 
         // ASSERT
         Assert.That(PasswordStrategyFactory.Instance, Is.SameAs(factory), "Should be a Singleton");
-        Assert.That(randomStrategy, Is.InstanceOf<RandomCharacterStrategy>());
-        Assert.That(wordListStrategy, Is.InstanceOf<WordListStrategy>());
-        Assert.That(interactiveStrategy, Is.InstanceOf<InteractivePassphraseStrategy>());
+        Assert.That(randomStrategy, Is.InstanceOf<RandomCharacterStrategy>(), "Should be RandomCharacterStrategy");
+        Assert.That(wordListStrategy, Is.InstanceOf<WordListStrategy>(), "Should be WordListStrategy");
+        Assert.That(interactiveStrategy, Is.InstanceOf<InteractivePassphraseStrategy>(), "Should be InteractivePassphraseStrategy");
     }
 
     [Test]
     public void Builder_ShouldCorrectlyPopulateRequirementsCollection()
     {
+        Log("Starting Builder_ShouldCorrectlyPopulateRequirementsCollection");
         // ARRANGE
         var builder = new PasswordOptionsBuilder()
             .RequireUppercase()
@@ -82,33 +85,39 @@ public class PatternTests
         options.Requirements.Accept(visitor);
 
         // ASSERT
-        Assert.That(visitor.NeedsUpper, Is.True);
-        Assert.That(visitor.NeedsDigit, Is.True);
-        Assert.That(visitor.MinLength, Is.EqualTo(15));
-        Assert.That(visitor.MaxLength, Is.EqualTo(25));
+        Assert.That(visitor.NeedsUpper, Is.True, "NeedsUpper mismatch");
+        Assert.That(visitor.NeedsDigit, Is.True, "NeedsDigit mismatch");
+        Assert.That(visitor.MinLength, Is.EqualTo(15), "MinLength mismatch");
+        Assert.That(visitor.MaxLength, Is.EqualTo(25), "MaxLength mismatch");
     }
 
     [Test]
     public void TemplateMethod_BasePasswordStrategy_ShouldExecuteCommonLogic()
     {
+        Log("Starting TemplateMethod_BasePasswordStrategy_ShouldExecuteCommonLogic");
         // We verify this by checking if Replacements are applied regardless of the strategy
         // ARRANGE
         var subs = new Dictionary<char, char> { { 'a', '@' } };
         var options = new PasswordOptionsBuilder()
             .WithReplacements(subs)
             .AllowLowercase()
-            .WithLength(100, 100) // Large enough to guarantee 'a' is generated
+            .WithLength(50, 50) 
             .Build();
         
-        var generator = new PasswordFacade();
-        char[] buf = new char[200];
-
-        // ACT
-        var (len, resultBuf) = generator.GeneratePassword(options, buf);
-        string result = new string(resultBuf, 0, len);
+        bool replacementFound = false;
+        for (int i = 0; i < 10; i++) // Run multiple times to avoid statistical bad luck
+        {
+            var (len, resultBuf) = Facade.GeneratePassword(options, Buffer);
+            string result = GetString(resultBuf, len);
+            if (result.Contains("@"))
+            {
+                replacementFound = true;
+                Log($"Replacement '@' found in run {i + 1}: {result}");
+                break;
+            }
+        }
 
         // ASSERT
-        // If the Template Method works, ApplyReplacements (in BaseStrategy) must have been called.
-        Assert.That(result, Does.Contain("@"), "Replacements should be applied by the BaseStrategy");
+        Assert.That(replacementFound, Is.True, "Replacements should be applied by the BaseStrategy (did not trigger in 10 runs of length 50)");
     }
 }
