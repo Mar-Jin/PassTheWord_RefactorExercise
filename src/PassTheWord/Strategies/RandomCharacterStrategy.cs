@@ -2,31 +2,13 @@ using RND = System.Security.Cryptography.RandomNumberGenerator;
 
 namespace PassTheWord.Strategies;
 
-public class CharacterStrategy: IPasswordStrategy
+public class RandomCharacterStrategy: IPasswordStrategy
 {
-    private bool _interactive;
-    private bool _excludeSimilar;
-    private bool _uppercase;
-    private bool _lowercase;
-    private bool _digits;
-    private bool _symbols;
-    private bool _reqUpper;
-    private bool _reqDigit;
-    private bool _reqSymbol;
+    private readonly PasswordOptions _options;
     
-    public CharacterStrategy(bool interactive, bool excludeSimilar, bool uppercase, bool lowercase, bool digits, bool symbols, bool reqUpper, bool reqDigit, bool reqSymbol)
+    public RandomCharacterStrategy(PasswordOptions options)
     {
-        Console.WriteLine("Succesfully created CharacterStrategy");
-
-        _interactive = interactive;
-        _excludeSimilar = excludeSimilar;
-        _uppercase = uppercase;
-        _lowercase = lowercase;
-        _digits = digits;
-        _symbols = symbols;
-        _reqUpper = reqUpper;
-        _reqDigit = reqDigit;
-        _reqSymbol = reqSymbol;
+        _options = options;
     }
     
     public (int len, char[] buf) Generate(Span<char> buf, int minLength, int maxLength, Dictionary<char, char> replacements)
@@ -35,10 +17,10 @@ public class CharacterStrategy: IPasswordStrategy
         
         string alphabet = "";
 
-        if (_uppercase) alphabet += _excludeSimilar ? "ABCDEFGHJKLMNPQRSTUVWXYZ" : "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        if (_lowercase) alphabet += _excludeSimilar ? "abcdefghijkmnopqrstuvwxyz" : "abcdefghijklmnopqrstuvwxyz";
-        if (_digits) alphabet += !_excludeSimilar ? "0123456789" : "23456789";
-        if (_symbols) alphabet += "!@#$%^&*()_+-=,./?~";
+        if (_options.Uppercase) alphabet += _options.ExcludeSimilar ? "ABCDEFGHJKLMNPQRSTUVWXYZ" : "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        if (_options.Lowercase) alphabet += _options.ExcludeSimilar ? "abcdefghijkmnopqrstuvwxyz" : "abcdefghijklmnopqrstuvwxyz";
+        if (_options.Digits) alphabet += !_options.ExcludeSimilar ? "0123456789" : "23456789";
+        if (_options.Symbols) alphabet += "!@#$%^&*()_+-=,./?~";
 
         /*Console.WriteLine("Log - String Builder");
         StringBuilder sb = new();
@@ -63,20 +45,20 @@ public class CharacterStrategy: IPasswordStrategy
 
         sb.Clear();*/
 
-        if (!_interactive)
+        if (!_options.Interactive)
         {
-            if (_excludeSimilar)
+            if (_options.ExcludeSimilar)
             {
-                if (_reqUpper) buf[len++] = RND.GetString("ABCDEFGHJKLMNPQRSTUVWXYZ", 1)[0];
-                if (_reqDigit) buf[len++] = RND.GetString("23456789", 1)[0];
+                if (_options.ReqUpper) buf[len++] = RND.GetString("ABCDEFGHJKLMNPQRSTUVWXYZ", 1)[0];
+                if (_options.ReqDigit) buf[len++] = RND.GetString("23456789", 1)[0];
             }
             else
             {
-                if (_reqUpper) buf[len++] = RND.GetString("ABCDEFGHJKLMNPQRSTUVWXYZIO", 1)[0];
-                if (_reqDigit) buf[len++] = RND.GetString("2345678901", 1)[0];
+                if (_options.ReqUpper) buf[len++] = RND.GetString("ABCDEFGHJKLMNPQRSTUVWXYZIO", 1)[0];
+                if (_options.ReqDigit) buf[len++] = RND.GetString("2345678901", 1)[0];
             }
 
-            if (_reqSymbol) buf[len++] = RND.GetString("!@#$%^&*()_+-=,./?~", 1)[0];
+            if (_options.ReqSymbol) buf[len++] = RND.GetString("!@#$%^&*()_+-=,./?~", 1)[0];
 
             foreach (char c in buf)
             {
@@ -84,6 +66,7 @@ public class CharacterStrategy: IPasswordStrategy
             }
 
             RND.GetItems(alphabet, buf.Slice(len, minLength - len));
+            len = minLength; 
             RND.Shuffle(buf.Slice(0, minLength));
         }
         else
