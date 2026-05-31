@@ -2,28 +2,13 @@ using RND = System.Security.Cryptography.RandomNumberGenerator;
 
 namespace PassTheWord.Strategies;
 
-public class InteractivePassphraseStrategy: IPasswordStrategy
+public class InteractivePassphraseStrategy(PasswordOptions options): BasePasswordStrategy(options)
 {
-    private readonly PasswordOptions _options;
-
-    public InteractivePassphraseStrategy(PasswordOptions options)
+    protected override int FillBuffer(Span<char> buf)
     {
-        _options = options;
-    }
-    
-    public (int len, char[] buf) Generate()
-    {
-        Span<char> buf = new char[_options.MaxLength];
         int len = 0;
 
-        string alphabet = "";
-
-        if (_options.Uppercase)
-            alphabet += _options.ExcludeSimilar ? "ABCDEFGHJKLMNPQRSTUVWXYZ" : "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        if (_options.Lowercase)
-            alphabet += _options.ExcludeSimilar ? "abcdefghijkmnopqrstuvwxyz" : "abcdefghijklmnopqrstuvwxyz";
-        if (_options.Digits) alphabet += !_options.ExcludeSimilar ? "0123456789" : "23456789";
-        if (_options.Symbols) alphabet += "!@#$%^&*()_+-=,./?~";
+        string alphabet = BuildAlphabet();
 
         /*Console.WriteLine("Log - String Builder");
         StringBuilder sb = new();
@@ -54,7 +39,7 @@ public class InteractivePassphraseStrategy: IPasswordStrategy
             Console.Write("Enter passphrase: ");
             s1 = Console.ReadLine();
             //TODO assert Unicode MLP, reqX
-        } while (s1.Length < _options.MinLength || s1.Length > buf.Length);
+        } while (s1.Length < options.MinLength || s1.Length > buf.Length);
 
         len = s1.Length;
         s1.TryCopyTo(buf);
@@ -62,15 +47,15 @@ public class InteractivePassphraseStrategy: IPasswordStrategy
         for (int i = 0; i < len; i++)
         {
             char currentCharacter = buf[i];
-            if (!_options.Replacements.ContainsKey(currentCharacter)) continue;
+            if (!options.Replacements.ContainsKey(currentCharacter)) continue;
             bool shouldReplace = RND.GetInt32(0, 100) < 50;
 
             if (shouldReplace)
             {
-                buf[i] = _options.Replacements[currentCharacter];
+                buf[i] = options.Replacements[currentCharacter];
             }
-        }   
+        }
 
-        return (len, buf.ToArray());
+        return len;
     }
 }

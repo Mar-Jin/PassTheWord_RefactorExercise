@@ -2,26 +2,13 @@ using RND = System.Security.Cryptography.RandomNumberGenerator;
 
 namespace PassTheWord.Strategies;
 
-public class RandomCharacterStrategy: IPasswordStrategy
+public class RandomCharacterStrategy(PasswordOptions options): BasePasswordStrategy(options)
 {
-    private readonly PasswordOptions _options;
-    
-    public RandomCharacterStrategy(PasswordOptions options)
+    protected override int FillBuffer(Span<char> buf)
     {
-        _options = options;
-    }
-    
-    public (int len, char[] buf) Generate()
-    {
-        Span<char> buf = new char[_options.MaxLength];
         int len = 0;
-        
-        string alphabet = "";
-
-        if (_options.Uppercase) alphabet += _options.ExcludeSimilar ? "ABCDEFGHJKLMNPQRSTUVWXYZ" : "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        if (_options.Lowercase) alphabet += _options.ExcludeSimilar ? "abcdefghijkmnopqrstuvwxyz" : "abcdefghijklmnopqrstuvwxyz";
-        if (_options.Digits) alphabet += !_options.ExcludeSimilar ? "0123456789" : "23456789";
-        if (_options.Symbols) alphabet += "!@#$%^&*()_+-=,./?~";
+        string alphabet = BuildAlphabet();
+        Console.WriteLine(alphabet);
 
         /*Console.WriteLine("Log - String Builder");
         StringBuilder sb = new();
@@ -46,40 +33,39 @@ public class RandomCharacterStrategy: IPasswordStrategy
 
         sb.Clear();*/
         
-        if (_options.ExcludeSimilar)
+        if (Options.ExcludeSimilar)
         {
-            if (_options.ReqUpper) buf[len++] = RND.GetString("ABCDEFGHJKLMNPQRSTUVWXYZ", 1)[0];
-            if (_options.ReqDigit) buf[len++] = RND.GetString("23456789", 1)[0];
+            if (Options.ReqUpper) buf[len++] = RND.GetString("ABCDEFGHJKLMNPQRSTUVWXYZ", 1)[0];
+            if (Options.ReqDigit) buf[len++] = RND.GetString("23456789", 1)[0];
         }
         else
         {
-            if (_options.ReqUpper) buf[len++] = RND.GetString("ABCDEFGHJKLMNPQRSTUVWXYZIO", 1)[0];
-            if (_options.ReqDigit) buf[len++] = RND.GetString("2345678901", 1)[0];
+            if (Options.ReqUpper) buf[len++] = RND.GetString("ABCDEFGHJKLMNPQRSTUVWXYZIO", 1)[0];
+            if (Options.ReqDigit) buf[len++] = RND.GetString("2345678901", 1)[0];
         }
 
-        if (_options.ReqSymbol) buf[len++] = RND.GetString("!@#$%^&*()_+-=,./?~", 1)[0];
+        if (Options.ReqSymbol) buf[len++] = RND.GetString("!@#$%^&*()_+-=,./?~", 1)[0];
 
-        foreach (char c in buf)
+        foreach (char c in buf.Slice(0, len))
         {
             Console.WriteLine(c);
         }
 
-        RND.GetItems(alphabet, buf.Slice(len, _options.MinLength - len));
-        len = _options.MinLength; 
-        RND.Shuffle(buf.Slice(0, _options.MinLength));
-
+        RND.GetItems(alphabet, buf.Slice(len, Options.MinLength - len));
+        RND.Shuffle(buf.Slice(0, Options.MinLength));
+        
         for (int i = 0; i < len; i++)
         {
             char currentCharacter = buf[i];
-            if (!_options.Replacements.ContainsKey(currentCharacter)) continue;
+            if (!options.Replacements.ContainsKey(currentCharacter)) continue;
             bool shouldReplace = RND.GetInt32(0, 100) < 50;
 
             if (shouldReplace)
             {
-                buf[i] = _options.Replacements[currentCharacter];
+                buf[i] = options.Replacements[currentCharacter];
             }
         }
 
-        return (len, buf.ToArray());
+        return len;
     }
 }

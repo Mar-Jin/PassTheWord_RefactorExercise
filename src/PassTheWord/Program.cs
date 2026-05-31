@@ -21,8 +21,10 @@ public class Program
 
         PasswordOptions options = new PasswordOptionsBuilder()
             .WithReplacements(subs)
-            .WithDictionary(longWords)
             .WithLength(15, 20)
+            .RequireDigit()
+            .RequireSymbol()
+            .RequireUppercase()
             .Build();
 
         (len, buf) = passwordGenerator.GeneratePassword(options, buf);
