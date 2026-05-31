@@ -1,9 +1,13 @@
+using PassTheWord.Requirements;
 namespace PassTheWord;
 
 public class PasswordOptionsBuilder
 {
     private Dictionary<char, char> _replacements = new();
     private List<string>? _dictionary;
+    
+    private RequirementCollection _requirements = new();
+    
     private int _minLength = 8;
     private int _maxLength = 20;
     private bool _excludeSimilar;
@@ -20,6 +24,8 @@ public class PasswordOptionsBuilder
     {
         _minLength = min;
         _maxLength = max;
+        _requirements.Add(new MinLengthRequirement(min));
+        _requirements.Add(new MaxLengthRequirement(max));
         return this;
     }
 
@@ -52,9 +58,26 @@ public class PasswordOptionsBuilder
     public PasswordOptionsBuilder AllowDigits()    { _digits = true; return this; }
     public PasswordOptionsBuilder AllowSymbols()   { _symbols = true; return this; }
 
-    public PasswordOptionsBuilder RequireUppercase() { _reqUpper = true; return this; }
-    public PasswordOptionsBuilder RequireDigit()     { _reqDigit = true; return this; }
-    public PasswordOptionsBuilder RequireSymbol()    { _reqSymbol = true; return this; }
+    public PasswordOptionsBuilder RequireUppercase()
+    {
+        _reqUpper = true;
+        _requirements.Add(new UppercaseRequirement());
+        return this;
+    }
+
+    public PasswordOptionsBuilder RequireDigit()
+    {
+        _reqDigit = true;
+        _requirements.Add(new DigitRequirement());
+        return this;
+    }
+
+    public PasswordOptionsBuilder RequireSymbol()
+    {
+        _reqSymbol = true; 
+        _requirements.Add(new SymbolRequirement());
+        return this;
+    }
 
     public PasswordOptions Build()
     {
@@ -67,6 +90,7 @@ public class PasswordOptionsBuilder
         {
             Replacements = _replacements,
             Dictionary = _dictionary,
+            Requirements = _requirements,
             MinLength = _minLength,
             MaxLength = _maxLength,
             ExcludeSimilar = _excludeSimilar,

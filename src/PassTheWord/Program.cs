@@ -22,6 +22,7 @@ public class Program
         PasswordOptions options = new PasswordOptionsBuilder()
             .WithReplacements(subs)
             .WithLength(15, 20)
+            .AsInteractive()
             .RequireDigit()
             .RequireSymbol()
             .RequireUppercase()

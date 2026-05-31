@@ -11,6 +11,7 @@ public class WordListStrategy(PasswordOptions options): BasePasswordStrategy(opt
 
         Console.WriteLine("Log - Adding words to the result");
         int len = 0;
+        
         while (len < Options.MinLength)
         {
             string w = options.Dictionary[RND.GetInt32(options.Dictionary.Count)];
