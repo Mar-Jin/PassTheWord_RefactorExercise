@@ -14,17 +14,14 @@ public class PasswordFacade
         _factory = factory;
     }
 
-    public (int, char[]) GeneratePassword(PasswordOptions options, Span<char> buf)
+    public (int len, char[] buf) GeneratePassword(PasswordOptions options, Span<char> destination)
     {
-        Random rnd = new();
-        int len = 0;
-
-        // check buf.Length >= minlength
-        if (!(buf.Length >= options.MinLength))
-            throw new ArgumentException("The length of the buffer is less than the minimum length requested");
+        if (destination.Length < options.MinLength)
+        {
+            throw new ArgumentException("The length of the destination buffer is less than the minimum length requested", nameof(destination));
+        }
 
         IPasswordStrategy strategy = _factory.Create(options);
-
         return strategy.Generate();
     }
 }

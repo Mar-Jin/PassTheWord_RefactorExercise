@@ -1,3 +1,6 @@
+using System.Text;
+using System.Security.Cryptography;
+using System.Linq;
 using PassTheWord.Requirements;
 using RND = System.Security.Cryptography.RandomNumberGenerator;
 
@@ -17,42 +20,67 @@ public abstract class BasePasswordStrategy : IPasswordStrategy
 
     public (int len, char[] buf) Generate()
     {
-        Span<char> buf = new char[Options.MaxLength];
-        int len = 0;
+        char[] buffer = new char[Options.MaxLength];
+        int len;
         string password;
 
         do {
-            len = FillBuffer(buf); 
-            password = new string(buf.Slice(0, len));
-        } while (!Options.Requirements.IsSatisfiedBy(password)); 
+            len = FillBuffer(buffer); 
+            ApplyReplacements(buffer, len);
+            password = new string(buffer, 0, len);
+        } while (!Options.Requirements.IsSatisfiedBy(password) || !VerifyExternal(password)); 
 
-        ApplyReplacements(buf, len);
-        return (len, buf.ToArray());
+        return (len, buffer[..len]);
     }
 
     protected abstract int FillBuffer(Span<char> buf);
 
-    private void ApplyReplacements(Span<char> buf, int len)
+    private void ApplyReplacements(char[] buf, int len)
     {
         for (int i = 0; i < len; i++)
         {
             char currentCharacter = buf[i];
-            if (!Options.Replacements.ContainsKey(currentCharacter)) continue;
+            if (!Options.Replacements.TryGetValue(currentCharacter, out char replacement)) continue;
             
             if (RND.GetInt32(0, 100) < 50)
             {
-                buf[i] = Options.Replacements[currentCharacter];
+                buf[i] = replacement;
             }
         }
+    }
+
+    private bool VerifyExternal(string password)
+    {
+        if (Options.Verifiers.Count == 0) return true;
+
+        byte[] passwordBytes = Encoding.UTF8.GetBytes(password);
+        var groups = Options.Verifiers.GroupBy(v => v.HashAlgorithmName);
+
+        foreach (var group in groups)
+        {
+            using var algorithm = IncrementalHash.CreateHash(new HashAlgorithmName(group.Key));
+            algorithm.AppendData(passwordBytes);
+            byte[] hash = algorithm.GetHashAndReset();
+
+            if (group.Any(verifier => !verifier.IsSafe(hash)))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
     
     protected string BuildAlphabet()
     {
-        string alphabet = "";
-        if (Options.Uppercase) alphabet += Options.ExcludeSimilar ? "ABCDEFGHJKLMNPQRSTUVWXYZ" : "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        if (Options.Lowercase) alphabet += Options.ExcludeSimilar ? "abcdefghijkmnopqrstuvwxyz" : "abcdefghijklmnopqrstuvwxyz";
-        if (Options.Digits)    alphabet += !Options.ExcludeSimilar ? "0123456789" : "23456789";
-        if (Options.Symbols)   alphabet += "!@#$%^&*()_+-=,./?~";
-        return alphabet;
+        StringBuilder alphabet = new();
+        foreach (var a in Options.Alphabets)
+        {
+            if (Options.Uppercase) alphabet.Append(a.GetUppercase(Options.ExcludeSimilar));
+            if (Options.Lowercase) alphabet.Append(a.GetLowercase(Options.ExcludeSimilar));
+            if (Options.Digits)    alphabet.Append(a.GetDigits(Options.ExcludeSimilar));
+            if (Options.Symbols)   alphabet.Append(a.GetSymbols(Options.ExcludeSimilar));
+        }
+        return alphabet.ToString();
     }
 }

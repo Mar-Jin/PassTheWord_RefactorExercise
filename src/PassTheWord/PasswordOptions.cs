@@ -1,9 +1,13 @@
 using PassTheWord.Requirements;
+using PassTheWord.Alphabets;
+using PassTheWord.Verification;
 
 namespace PassTheWord;
 
 public class PasswordOptions
 {
+    public List<IAlphabet> Alphabets { get; init; } = new() { new LatinAlphabet() };
+    public List<IPasswordVerifier> Verifiers { get; init; } = new();
     public Dictionary<char, char> Replacements { get; init; } = new();
     public List<string>? Dictionary { get; init; }
 

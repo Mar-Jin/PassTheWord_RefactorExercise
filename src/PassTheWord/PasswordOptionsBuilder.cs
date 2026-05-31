@@ -1,8 +1,13 @@
 using PassTheWord.Requirements;
+using PassTheWord.Alphabets;
+using PassTheWord.Verification;
+
 namespace PassTheWord;
 
 public class PasswordOptionsBuilder
 {
+    private List<IAlphabet> _alphabets = new();
+    private List<IPasswordVerifier> _verifiers = new();
     private Dictionary<char, char> _replacements = new();
     private List<string>? _dictionary;
     
@@ -16,9 +21,6 @@ public class PasswordOptionsBuilder
     private bool _lowercase;
     private bool _digits;
     private bool _symbols;
-    private bool _reqUpper;
-    private bool _reqDigit;
-    private bool _reqSymbol;
 
     public PasswordOptionsBuilder WithLength(int min, int max)
     {
@@ -76,15 +78,34 @@ public class PasswordOptionsBuilder
         return this;
     }
 
+    public PasswordOptionsBuilder AddAlphabet(IAlphabet alphabet)
+    {
+        _alphabets.Add(alphabet);
+        return this;
+    }
+
+    public PasswordOptionsBuilder AddVerifier(IPasswordVerifier verifier)
+    {
+        _verifiers.Add(verifier);
+        return this;
+    }
+
     public PasswordOptions Build()
     {
         if (_minLength > _maxLength)
         {
             throw new InvalidOperationException("MinLength may not be more than MaxLength");
         }
+
+        if (_alphabets.Count == 0)
+        {
+            _alphabets.Add(new LatinAlphabet());
+        }
         
         return new PasswordOptions
         {
+            Alphabets = _alphabets,
+            Verifiers = _verifiers,
             Replacements = _replacements,
             Dictionary = _dictionary,
             Requirements = _requirements,
