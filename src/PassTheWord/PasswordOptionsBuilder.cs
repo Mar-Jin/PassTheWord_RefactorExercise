@@ -2,55 +2,82 @@ namespace PassTheWord;
 
 public class PasswordOptionsBuilder
 {
-    private readonly PasswordOptions _options = new();
+    private Dictionary<char, char> _replacements = new();
+    private List<string>? _dictionary;
+    private int _minLength = 8;
+    private int _maxLength = 20;
+    private bool _excludeSimilar;
+    private bool _interactive;
+    private bool _uppercase;
+    private bool _lowercase;
+    private bool _digits;
+    private bool _symbols;
+    private bool _reqUpper;
+    private bool _reqDigit;
+    private bool _reqSymbol;
 
     public PasswordOptionsBuilder WithLength(int min, int max)
     {
-        _options.MinLength = min;
-        _options.MaxLength = max;
+        _minLength = min;
+        _maxLength = max;
         return this;
     }
 
     public PasswordOptionsBuilder WithReplacements(Dictionary<char, char> replacements)
     {
-        _options.Replacements = replacements;
+        _replacements = replacements;
         return this;
     }
 
     public PasswordOptionsBuilder WithDictionary(List<string> dictionary)
     {
-        _options.Dictionary = dictionary;
+        _dictionary = dictionary;
         return this;
     }
 
     public PasswordOptionsBuilder AsInteractive()
     {
-        _options.Interactive = true;
+        _interactive = true;
         return this;
     }
 
     public PasswordOptionsBuilder ExcludeSimilarCharacters()
     {
-        _options.ExcludeSimilar = true;
+        _excludeSimilar = true;
         return this;
     }
 
-    public PasswordOptionsBuilder AllowUppercase() { _options.Uppercase = true; return this; }
-    public PasswordOptionsBuilder AllowLowercase() { _options.Lowercase = true; return this; }
-    public PasswordOptionsBuilder AllowDigits()    { _options.Digits = true; return this; }
-    public PasswordOptionsBuilder AllowSymbols()   { _options.Symbols = true; return this; }
+    public PasswordOptionsBuilder AllowUppercase() { _uppercase = true; return this; }
+    public PasswordOptionsBuilder AllowLowercase() { _lowercase = true; return this; }
+    public PasswordOptionsBuilder AllowDigits()    { _digits = true; return this; }
+    public PasswordOptionsBuilder AllowSymbols()   { _symbols = true; return this; }
 
-    public PasswordOptionsBuilder RequireUppercase() { _options.ReqUpper = true; return this; }
-    public PasswordOptionsBuilder RequireDigit()     { _options.ReqDigit = true; return this; }
-    public PasswordOptionsBuilder RequireSymbol()    { _options.ReqSymbol = true; return this; }
+    public PasswordOptionsBuilder RequireUppercase() { _reqUpper = true; return this; }
+    public PasswordOptionsBuilder RequireDigit()     { _reqDigit = true; return this; }
+    public PasswordOptionsBuilder RequireSymbol()    { _reqSymbol = true; return this; }
 
     public PasswordOptions Build()
     {
-        if (_options.MinLength > _options.MaxLength)
+        if (_minLength > _maxLength)
         {
             throw new InvalidOperationException("MinLength may not be more than MaxLength");
         }
         
-        return _options;
+        return new PasswordOptions
+        {
+            Replacements = _replacements,
+            Dictionary = _dictionary,
+            MinLength = _minLength,
+            MaxLength = _maxLength,
+            ExcludeSimilar = _excludeSimilar,
+            Interactive = _interactive,
+            Uppercase = _uppercase,
+            Lowercase = _lowercase,
+            Digits = _digits,
+            Symbols = _symbols,
+            ReqUpper = _reqUpper,
+            ReqDigit = _reqDigit,
+            ReqSymbol = _reqSymbol
+        };
     }
 }

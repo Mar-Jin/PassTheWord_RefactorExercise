@@ -45,26 +45,16 @@ public class RandomCharacterStrategy(PasswordOptions options): BasePasswordStrat
         }
 
         if (Options.ReqSymbol) buf[len++] = RND.GetString("!@#$%^&*()_+-=,./?~", 1)[0];
-
-        foreach (char c in buf.Slice(0, len))
-        {
-            Console.WriteLine(c);
-        }
-
-        RND.GetItems(alphabet, buf.Slice(len, Options.MinLength - len));
-        RND.Shuffle(buf.Slice(0, Options.MinLength));
         
-        for (int i = 0; i < len; i++)
-        {
-            char currentCharacter = buf[i];
-            if (!options.Replacements.ContainsKey(currentCharacter)) continue;
-            bool shouldReplace = RND.GetInt32(0, 100) < 50;
+        int charsToAdd = Options.MinLength - len;
 
-            if (shouldReplace)
-            {
-                buf[i] = options.Replacements[currentCharacter];
-            }
+        if (charsToAdd > 0)
+        {
+            RND.GetItems(alphabet, buf.Slice(len, Options.MinLength - len));
+            len += charsToAdd;
         }
+        
+        RND.Shuffle(buf.Slice(0, Options.MinLength));
 
         return len;
     }

@@ -2,21 +2,17 @@ namespace PassTheWord;
 
 public class PasswordOptions
 {
-    public Dictionary<char, char> Replacements { get; set; } = new();
-    public List<string>? Dictionary { get; set; } = null;
-    
-    public int MinLength { get; set; } = 8;
-    public int MaxLength { get; set; } = 20;
-    
-    public bool ExcludeSimilar { get; set; } = false;
-    public bool Interactive { get; set; } = false;
-    
-    public bool Uppercase { get; set; } = false;
-    public bool Lowercase { get; set; } = false;
-    public bool Digits { get; set; } = false;
-    public bool Symbols { get; set; } = false;
-    
-    public bool ReqUpper { get; set; } = false;
-    public bool ReqDigit { get; set; } = false;
-    public bool ReqSymbol { get; set; } = false;
+    public Dictionary<char, char> Replacements { get; init; } = new();
+    public List<string>? Dictionary { get; init; }
+    public int MinLength { get; init; } = 8;
+    public int MaxLength { get; init; } = 20;
+    public bool ExcludeSimilar { get; init; }
+    public bool Interactive { get; init; }
+    public bool Uppercase { get; init; }
+    public bool Lowercase { get; init; }
+    public bool Digits { get; init; }
+    public bool Symbols { get; init; }
+    public bool ReqUpper { get; init; }
+    public bool ReqDigit { get; init; }
+    public bool ReqSymbol { get; init; }
 }
