@@ -23,6 +23,6 @@ public class PasswordFacade
 
         IPasswordStrategy strategy = PasswordStrategyFactory.Create(options);
 
-        return strategy.Generate(buf, options.MinLength, options.MaxLength, options.Replacements);
+        return strategy.Generate();
     }
 }

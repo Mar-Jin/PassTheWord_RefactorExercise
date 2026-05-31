@@ -2,11 +2,11 @@ using RND = System.Security.Cryptography.RandomNumberGenerator;
 
 namespace PassTheWord.Strategies;
 
-public class RandomCharacterStrategy: IPasswordStrategy
+public class InteractivePassphraseStrategy: IPasswordStrategy
 {
     private readonly PasswordOptions _options;
-    
-    public RandomCharacterStrategy(PasswordOptions options)
+
+    public InteractivePassphraseStrategy(PasswordOptions options)
     {
         _options = options;
     }
@@ -15,11 +15,13 @@ public class RandomCharacterStrategy: IPasswordStrategy
     {
         Span<char> buf = new char[_options.MaxLength];
         int len = 0;
-        
+
         string alphabet = "";
 
-        if (_options.Uppercase) alphabet += _options.ExcludeSimilar ? "ABCDEFGHJKLMNPQRSTUVWXYZ" : "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        if (_options.Lowercase) alphabet += _options.ExcludeSimilar ? "abcdefghijkmnopqrstuvwxyz" : "abcdefghijklmnopqrstuvwxyz";
+        if (_options.Uppercase)
+            alphabet += _options.ExcludeSimilar ? "ABCDEFGHJKLMNPQRSTUVWXYZ" : "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        if (_options.Lowercase)
+            alphabet += _options.ExcludeSimilar ? "abcdefghijkmnopqrstuvwxyz" : "abcdefghijklmnopqrstuvwxyz";
         if (_options.Digits) alphabet += !_options.ExcludeSimilar ? "0123456789" : "23456789";
         if (_options.Symbols) alphabet += "!@#$%^&*()_+-=,./?~";
 
@@ -45,28 +47,17 @@ public class RandomCharacterStrategy: IPasswordStrategy
         if (ContainsParadoxicalRequest(_reqUpper, _reqDigit, _reqSymbol, _uppercase, _digits, _symbols)) return -1;
 
         sb.Clear();*/
-        
-        if (_options.ExcludeSimilar)
+        string? s1 = null;
+        do
         {
-            if (_options.ReqUpper) buf[len++] = RND.GetString("ABCDEFGHJKLMNPQRSTUVWXYZ", 1)[0];
-            if (_options.ReqDigit) buf[len++] = RND.GetString("23456789", 1)[0];
-        }
-        else
-        {
-            if (_options.ReqUpper) buf[len++] = RND.GetString("ABCDEFGHJKLMNPQRSTUVWXYZIO", 1)[0];
-            if (_options.ReqDigit) buf[len++] = RND.GetString("2345678901", 1)[0];
-        }
+            //FIXME We need to be more flexible regarding input options (e.g. GUI)
+            Console.Write("Enter passphrase: ");
+            s1 = Console.ReadLine();
+            //TODO assert Unicode MLP, reqX
+        } while (s1.Length < _options.MinLength || s1.Length > buf.Length);
 
-        if (_options.ReqSymbol) buf[len++] = RND.GetString("!@#$%^&*()_+-=,./?~", 1)[0];
-
-        foreach (char c in buf)
-        {
-            Console.WriteLine(c);
-        }
-
-        RND.GetItems(alphabet, buf.Slice(len, _options.MinLength - len));
-        len = _options.MinLength; 
-        RND.Shuffle(buf.Slice(0, _options.MinLength));
+        len = s1.Length;
+        s1.TryCopyTo(buf);
 
         for (int i = 0; i < len; i++)
         {
@@ -78,7 +69,7 @@ public class RandomCharacterStrategy: IPasswordStrategy
             {
                 buf[i] = _options.Replacements[currentCharacter];
             }
-        }
+        }   
 
         return (len, buf.ToArray());
     }
