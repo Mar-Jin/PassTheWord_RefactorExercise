@@ -1,0 +1,223 @@
+@startuml PassTheWord
+
+package "PassTheWord" {
+    class Program {
+        + {static} Main()
+    }
+
+    class PasswordFacade {
+        - _factory: PasswordStrategyFactory
+        + PasswordFacade()
+        + PasswordFacade(factory: PasswordStrategyFactory)
+        + GeneratePassword(options: PasswordOptions, destination: Span<char>): (int, char[])
+    }
+
+    class PasswordOptions {
+        + Alphabets: List<IAlphabet>
+        + Verifiers: List<IPasswordVerifier>
+        + Replacements: Dictionary<char, char>
+        + Dictionary: List<string>?
+        + Requirements: RequirementCollection
+        + MinLength: int
+        + MaxLength: int
+        + ExcludeSimilar: bool
+        + Interactive: bool
+        + Uppercase: bool
+        + Lowercase: bool
+        + Digits: bool
+        + Symbols: bool
+    }
+
+    class PasswordOptionsBuilder {
+        - _alphabets: List<IAlphabet>
+        - _verifiers: List<IPasswordVerifier>
+        - _replacements: Dictionary<char, char>
+        - _dictionary: List<string>?
+        - _requirements: RequirementCollection
+        - _minLength: int
+        - _maxLength: int
+        - _excludeSimilar: bool
+        - _interactive: bool
+        - _uppercase: bool
+        - _lowercase: bool
+        - _digits: bool
+        - _symbols: bool
+        + WithLength(min: int, max: int): PasswordOptionsBuilder
+        + WithReplacements(replacements: Dictionary<char, char>): PasswordOptionsBuilder
+        + WithDictionary(dictionary: List<string>): PasswordOptionsBuilder
+        + AsInteractive(): PasswordOptionsBuilder
+        + ExcludeSimilarCharacters(): PasswordOptionsBuilder
+        + AllowUppercase(): PasswordOptionsBuilder
+        + AllowLowercase(): PasswordOptionsBuilder
+        + AllowDigits(): PasswordOptionsBuilder
+        + AllowSymbols(): PasswordOptionsBuilder
+        + RequireUppercase(): PasswordOptionsBuilder
+        + RequireDigit(): PasswordOptionsBuilder
+        + RequireSymbol(): PasswordOptionsBuilder
+        + AddAlphabet(alphabet: IAlphabet): PasswordOptionsBuilder
+        + AddVerifier(verifier: IPasswordVerifier): PasswordOptionsBuilder
+        + Build(): PasswordOptions
+    }
+
+    PasswordFacade ..> PasswordOptions : uses
+    PasswordFacade ..> PasswordStrategyFactory : uses
+    PasswordOptionsBuilder ..> PasswordOptions : builds
+}
+
+package "PassTheWord.Alphabets" {
+    interface IAlphabet {
+        + Name: string
+        + GetUppercase(excludeSimilar: bool): string
+        + GetLowercase(excludeSimilar: bool): string
+        + GetDigits(excludeSimilar: bool): string
+        + GetSymbols(excludeSimilar: bool): string
+    }
+
+    class LatinAlphabet {
+        + Name: string
+        + GetUppercase(excludeSimilar: bool): string
+        + GetLowercase(excludeSimilar: bool): string
+        + GetDigits(excludeSimilar: bool): string
+        + GetSymbols(excludeSimilar: bool): string
+    }
+
+    class CyrillicAlphabet {
+        + Name: string
+        + GetUppercase(excludeSimilar: bool): string
+        + GetLowercase(excludeSimilar: bool): string
+        + GetDigits(excludeSimilar: bool): string
+        + GetSymbols(excludeSimilar: bool): string
+    }
+
+    IAlphabet <|.. LatinAlphabet
+    IAlphabet <|.. CyrillicAlphabet
+}
+
+package "PassTheWord.Requirements" {
+    interface IPasswordRequirement {
+        + IsSatisfiedBy(password: string): bool
+        + Accept(visitor: IRequirementVisitor)
+    }
+
+    class DigitRequirement {
+        + IsSatisfiedBy(password: string): bool
+        + Accept(visitor: IRequirementVisitor)
+    }
+
+    class UppercaseRequirement {
+        + IsSatisfiedBy(password: string): bool
+        + Accept(visitor: IRequirementVisitor)
+    }
+
+    class SymbolRequirement {
+        + IsSatisfiedBy(password: string): bool
+        + Accept(visitor: IRequirementVisitor)
+    }
+
+    class MinLengthRequirement {
+        + Min: int
+        + IsSatisfiedBy(password: string): bool
+        + Accept(visitor: IRequirementVisitor)
+    }
+
+    class MaxLengthRequirement {
+        + Max: int
+        + IsSatisfiedBy(password: string): bool
+        + Accept(visitor: IRequirementVisitor)
+    }
+
+    class RequirementCollection {
+        - _requirements: List<IPasswordRequirement>
+        + Add(requirement: IPasswordRequirement)
+        + IsSatisfiedBy(password: string): bool
+        + Accept(visitor: IRequirementVisitor)
+    }
+
+    interface IRequirementVisitor {
+        + Visit(requirement: UppercaseRequirement)
+        + Visit(requirement: DigitRequirement)
+        + Visit(requirement: SymbolRequirement)
+        + Visit(requirement: MinLengthRequirement)
+        + Visit(requirement: MaxLengthRequirement)
+    }
+
+    class RequirementCharacterVisitor {
+        + NeedsUpper: bool
+        + NeedsDigit: bool
+        + NeedsSymbol: bool
+        + MinLength: int
+        + MaxLength: int
+        + Visit(requirement: UppercaseRequirement)
+        + Visit(requirement: DigitRequirement)
+        + Visit(requirement: SymbolRequirement)
+        + Visit(requirement: MinLengthRequirement)
+        + Visit(requirement: MaxLengthRequirement)
+    }
+
+    IPasswordRequirement <|.. DigitRequirement
+    IPasswordRequirement <|.. UppercaseRequirement
+    IPasswordRequirement <|.. SymbolRequirement
+    IPasswordRequirement <|.. MinLengthRequirement
+    IPasswordRequirement <|.. MaxLengthRequirement
+    IPasswordRequirement <|.. RequirementCollection
+    RequirementCollection o-- IPasswordRequirement
+
+    IRequirementVisitor <|.. RequirementCharacterVisitor
+}
+
+package "PassTheWord.Strategies" {
+    interface IPasswordStrategy {
+        + Generate(): (int, char[])
+    }
+
+    abstract class BasePasswordStrategy {
+        # Options: PasswordOptions
+        # Requirements: RequirementCharacterVisitor
+        + Generate(): (int, char[])
+        # {abstract} FillBuffer(buf: Span<char>): int
+        - ApplyReplacements(buf: char[], len: int)
+        - VerifyExternal(password: string): bool
+        # BuildAlphabet(): string
+    }
+
+    class RandomCharacterStrategy {
+        # FillBuffer(buf: Span<char>): int
+    }
+
+    class WordListStrategy {
+        # FillBuffer(buf: Span<char>): int
+        - ValidateDictionary()
+    }
+
+    class InteractivePassphraseStrategy {
+        # FillBuffer(buf: Span<char>): int
+    }
+
+    class PasswordStrategyFactory {
+        - {static} _instance: PasswordStrategyFactory
+        + {static} Instance: PasswordStrategyFactory
+        + Create(options: PasswordOptions): IPasswordStrategy
+    }
+
+    IPasswordStrategy <|.. BasePasswordStrategy
+    BasePasswordStrategy <|-- RandomCharacterStrategy
+    BasePasswordStrategy <|-- WordListStrategy
+    BasePasswordStrategy <|-- InteractivePassphraseStrategy
+    PasswordStrategyFactory ..> IPasswordStrategy : creates
+}
+
+package "PassTheWord.Verification" {
+    interface IPasswordVerifier {
+        + Name: string
+        + HashAlgorithmName: string
+        + IsSafe(hash: byte[]): bool
+    }
+}
+
+PasswordOptions "1" *-- "many" IAlphabet
+PasswordOptions "1" *-- "many" IPasswordVerifier
+PasswordOptions "1" *-- "1" RequirementCollection
+BasePasswordStrategy o-- PasswordOptions
+BasePasswordStrategy o-- RequirementCharacterVisitor
+
+@enduml
